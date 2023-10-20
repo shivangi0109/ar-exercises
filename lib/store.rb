@@ -3,6 +3,7 @@ class Store < ActiveRecord::Base
   validates :name, length: { minimum: 3 }
   validates :annual_revenue, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :must_carry_apparel
+  before_destroy :check_for_employees
 
   def must_carry_apparel
     # This condition `unless mens_apparel || womens_apparel` checks if the store has either mens_apparel set to true or womens_apparel set to true.
@@ -11,6 +12,15 @@ class Store < ActiveRecord::Base
     unless mens_apparel || womens_apparel
       # Using :base is helpful when you have validations that involve multiple attributes or the overall state of the object rather than just one attribute.
       errors.add(:base, "Stores must carry at least one type of apparel")
+    end
+  end
+
+  private
+
+  def check_for_employees
+    if employees.any?
+      errors.add(:base, "Cannot destroy store with employees.")
+      throw(:abort)
     end
   end
 end
